@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.ClassDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.ClassEntity">
+        <id column="class_id" jdbcType="INTEGER" property="classId" />
+        <result column="class_name" jdbcType="VARCHAR" property="className" />
+        <result column="period_id" jdbcType="INTEGER" property="periodId" />
+        <result column="grade_id" jdbcType="INTEGER" property="gradeId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <association property="gradeEntity" javaType="com.library.bexam.form.GradeForm">
+            <id column="grade_id"  jdbcType="INTEGER" property="gradeId"/>
+            <result column="grade_name" jdbcType="VARCHAR" property="gradeName"/>
+            <result column="period_id" jdbcType="INTEGER" property="periodId"/>
+        </association>
+        <association property="periodEntity" javaType="com.library.bexam.form.PeriodForm">
+            <id column="period_id" jdbcType="INTEGER" property="periodId"/>
+            <result column="period_name" jdbcType="VARCHAR" property="periodName"/>
+        </association>
+        <collection property="studentEntityList" ofType="com.library.bexam.form.StudentForm">
+            <id column="student_id" jdbcType="INTEGER" property="studentId"/>
+            <result column="student_realname" jdbcType="VARCHAR" property="realName"/>
+            <result column="student_code" jdbcType="VARCHAR" property="code"/>
+            <result column="student_gender" jdbcType="INTEGER" property="gender"/>
+            <result column="student_age" jdbcType="INTEGER" property="age"/>
+        </collection>
+    </resultMap>
+    <resultMap id="BaseClassResultMap" type="com.library.bexam.form.ClassForm">
+        <id column="class_id" jdbcType="INTEGER" property="classId" />
+        <result column="class_name" jdbcType="VARCHAR" property="className" />
+        <result column="period_id" jdbcType="INTEGER" property="periodId" />
+        <result column="grade_id" jdbcType="INTEGER" property="gradeId" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        distinct cla.class_id,cla.class_name,DATE_FORMAT(cla.create_time,'%Y-%m-%d %H:%i:%s') as create_time,p.period_id,p.period_name,
+        g.grade_id,g.grade_name,g.period_id,stu.student_id,stu.student_realname,stu.student_code,stu.student_gender,
+        stu.student_age,cla2stu.class_id
+    </sql>
+    <insert id="addClass" useGeneratedKeys="true" keyProperty="classId">
+        insert into exam_class
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="periodId!=null">
+                period_id,
+            </if>
+            <if test="gradeId!=null">
+                grade_id,
+            </if>
+            <if test="className!=null and className!=''">
+                class_name,
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values(" suffixOverrides="," suffix=")">
+            <if test="periodId!=null">
+                #{periodId},
+            </if>
+            <if test="gradeId!=null">
+                #{gradeId},
+            </if>
+            <if test="className!=null and className!=''">
+                #{className},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <select id="searchClassListByPeriodIds" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_class cla
+        left join exam_period p on p.period_id=cla.period_id
+        left join exam_grade g on cla.grade_id=g.grade_id
+        left join exam_class2student cla2stu on cla2stu.class_id=cla.class_id
+        left join exam_user_student stu on stu.student_id=cla2stu.student_id
+        <where>
+            <if test="periodIdArr!=null and periodIdArr.length>0">
+                and g.period_id in
+                <foreach collection="periodIdArr" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        order by cla.class_id desc
+    </select>
+    <delete id="deleteClassByPeriodIds">
+        delete cla from exam_class cla
+        left join exam_grade g on cla.grade_id=g.grade_id
+        left join exam_class2student cla2stu on cla2stu.class_id=cla.class_id
+        left join exam_user_student stu on stu.student_id=cla2stu.student_id
+        <where>
+            <if test="periodIdArr!=null and periodIdArr.length>0">
+                and g.period_id in
+                <foreach collection="periodIdArr" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <delete id="deleteClassByClassIds">
+        delete cla from exam_class cla
+        left join exam_grade g on cla.grade_id=g.grade_id
+        left join exam_class2student cla2stu on cla2stu.class_id=cla.class_id
+        left join exam_user_student stu on stu.student_id=cla2stu.student_id
+        <where>
+            and cla.class_id in
+            <foreach collection="list" item="item" open="(" separator="," close=")">
+                #{item.classId}
+            </foreach>
+        </where>
+    </delete>
+    <delete id="deleteClass2Student">
+        delete cla2stu from exam_class2student cla2stu
+        left join exam_class cla on cla2stu.class_id=cla.class_id
+        left join exam_user_student stu on stu.student_id=cla2stu.student_id
+        <where>
+            and cla2stu.class_id in
+            <foreach item="item" collection="list" open="(" separator="," close=")">
+                #{item.classId}
+            </foreach>
+        </where>
+    </delete>
+    <select id="searchClassListByGradeIds" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_class cla
+        left join exam_period p on p.period_id=cla.period_id
+        left join exam_grade g on cla.grade_id=g.grade_id
+        left join exam_class2student cla2stu on cla2stu.class_id=cla.class_id
+        left join exam_user_student stu on stu.student_id=cla2stu.student_id
+        <where>
+            and cla.grade_id in
+            <foreach collection="gradeIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+        order by cla.class_id desc
+    </select>
+    <update id="updateClass" parameterType="com.library.bexam.entity.ClassEntity">
+        update exam_class
+        <set>
+            <if test="periodId!=0">
+                period_id=#{periodId},
+            </if>
+            <if test="gradeId!=0">
+                grade_id=#{gradeId},
+            </if>
+            <if test="className!=null and className!=''">
+                class_name=#{className},
+            </if>
+        </set>
+        where class_id=#{classId}
+    </update>
+    <select id="searchClassById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_class cla
+        left join exam_period p on p.period_id=cla.period_id
+        left join exam_grade g on cla.grade_id=g.grade_id
+        left join exam_class2student cla2stu on cla2stu.class_id=cla.class_id
+        left join exam_user_student stu on stu.student_id=cla2stu.student_id
+        <where>
+            <if test="classId!=0">
+                and cla.class_id=#{classId}
+            </if>
+        </where>
+        order by cla.class_id desc
+    </select>
+    <select id="searchClassList" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_class cla
+        left join exam_period p on p.period_id=cla.period_id
+        left join exam_grade g on cla.grade_id=g.grade_id
+        left join exam_class2student cla2stu on cla2stu.class_id=cla.class_id
+        left join exam_user_student stu on stu.student_id=cla2stu.student_id
+        <where>
+            <if test="gradeId!=0">
+                and cla.grade_id=#{gradeId}
+            </if>
+            <if test="search!=null and search!=''">
+                and cla.class_name like concat('%',#{search},'%')
+            </if>
+        </where>
+        order by cla.class_id desc
+    </select>
+    <select id="searchClassesByUserId" parameterType="java.lang.Integer" resultMap="BaseClassResultMap">
+        select cla.class_id,cla.class_name
+        from exam_class cla
+        left join exam_class2user cla2user on cla2user.class_id=cla.class_id
+        left join exam_user u on u.user_id=cla2user.user_id
+        where u.user_id=#{userId}
+        order by cla.class_id desc
+    </select>
+    <insert id="allotClassToUser">
+        insert into exam_class2user(class_id,user_id)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.classId},#{userId})
+        </foreach>
+    </insert>
+</mapper>

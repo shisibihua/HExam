@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.PointDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.PointEntity">
+        <id column="point_id" jdbcType="INTEGER" property="pointId"/>
+        <result column="point_name" jdbcType="VARCHAR" property="pointName"/>
+        <result column="parent_point_id" jdbcType="INTEGER" property="parentId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <association property="subjectForm" javaType="com.library.bexam.form.SubjectForm">
+            <id column="subject_id" jdbcType="INTEGER" property="subjectId"/>
+            <result column="subject_name" jdbcType="VARCHAR" property="subjectName"/>
+        </association>
+    </resultMap>
+    <sql id="Base_Column_List">
+        distinct point.point_id,point.point_name,point.parent_point_id, DATE_FORMAT(point.create_time,'%Y-%m-%d %H:%i:%s') as create_time,
+        sub.subject_id,sub.subject_name
+    </sql>
+    <insert id="addPoint" parameterType="com.library.bexam.entity.PointEntity" useGeneratedKeys="true" keyProperty="pointId">
+        insert into exam_point
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="pointId!=0">
+                point_id,
+            </if>
+            <if test="pointName!=null and pointName!=''">
+                point_name,
+            </if>
+            <if test="parentId!=null">
+                parent_point_id,
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="pointId!=0">
+                #{pointId},
+            </if>
+            <if test="pointName!=null and pointName!=''">
+                #{pointName},
+            </if>
+            <if test="parentId!=null">
+                #{parentId},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <insert id="addPointList"  parameterType="com.library.bexam.form.PointForm" useGeneratedKeys="true" keyProperty="pointId">
+        insert into exam_point(point_id,point_name,parent_point_id,create_time)
+        values
+        <if test="list!=null and list.size()>0">
+            <foreach item="item" collection="list" separator=",">
+                (#{item.pointId},#{item.pointName},#{item.parentId},#{item.createTime})
+            </foreach>
+        </if>
+    </insert>
+    <insert id="addSubject2Point">
+        insert into exam_subject2point(subject_id,point_id)
+        values
+        <if test="list!=null and list.size()>0">
+            <foreach item="item" collection="list" separator=",">
+                (#{item.subjectId},#{item.pointId})
+            </foreach>
+        </if>
+    </insert>
+    <select id="searchPointListByPeriodIds" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_point point
+        left join exam_subject2point sub2point on point.point_id=sub2point.point_id
+        left join exam_subject sub on sub.subject_id=sub2point.subject_id
+        left join exam_period2subject per2sub on per2sub.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=per2sub.period_id
+        where p.period_id in
+        <foreach collection="periodIdArr" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by point.point_id asc
+    </select>
+    <select id="searchPointListBySubId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_point point
+        left join exam_subject2point sub2point on point.point_id=sub2point.point_id
+        left join exam_subject sub on sub.subject_id=sub2point.subject_id
+        where sub.subject_id=#{subjectId}
+        order by point.point_id asc
+    </select>
+    <select id="searchChildPointList" resultMap="BaseResultMap">
+        select distinct point.point_id,point.point_name,point.parent_point_id, DATE_FORMAT(point.create_time,'%Y-%m-%d %H:%i:%s') as create_time
+        from exam_point point
+        where point.parent_point_id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.pointId}
+        </foreach>
+        order by point.point_id asc
+    </select>
+</mapper>

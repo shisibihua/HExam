@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.GradeDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.GradeEntity">
+        <id column="grade_id" jdbcType="INTEGER" property="gradeId" />
+        <result column="grade_name" jdbcType="VARCHAR" property="gradeName" />
+        <result column="period_id" jdbcType="INTEGER" property="periodId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <association property="periodEntity" javaType="com.library.bexam.form.PeriodForm">
+            <id column="period_id" jdbcType="INTEGER" property="periodId"/>
+            <result column="period_name" jdbcType="VARCHAR" property="periodName"/>
+        </association>
+        <collection property="classEntityList" ofType="com.library.bexam.form.ClassForm">
+            <id column="class_id" jdbcType="INTEGER" property="classId"/>
+            <result column="class_name" jdbcType="VARCHAR" property="className"/>
+            <result column="grade_id" jdbcType="INTEGER" property="gradeId"/>
+        </collection>
+    </resultMap>
+    <sql id="Base_Column_List">
+        distinct g.grade_id,g.grade_name,DATE_FORMAT(g.create_time,'%Y-%m-%d %H:%i:%s') as create_time,cla.class_id,cla.class_name,
+        p.period_id,p.period_name
+    </sql>
+    <insert id="addGrade" useGeneratedKeys="true" keyProperty="gradeId">
+        insert into exam_grade
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="periodId!=null">
+                period_id,
+            </if>
+            <if test="gradeName!=null and gradeName!=''">
+                grade_name,
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values(" suffixOverrides="," suffix=")">
+            <if test="periodId!=null">
+                #{periodId},
+            </if>
+            <if test="gradeName!=null and gradeName!=''">
+                #{gradeName},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deleteGradeByPeriodIds">
+        delete g from exam_grade g
+        left join exam_period p
+        on g.period_id=p.period_id
+        <where>
+            <if test="periodIdArr!=null and periodIdArr.length>0">
+                and g.period_id in
+                <foreach collection="periodIdArr" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <delete id="deleteGradeByIds">
+        delete g from exam_grade g
+        left join exam_period p
+        on g.period_id=p.period_id
+        <where>
+            <if test="gradeIdsArr!=null and gradeIdsArr.length>0">
+                and g.grade_id in
+                <foreach collection="gradeIdsArr" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <update id="updateGrade" parameterType="com.library.bexam.entity.GradeEntity">
+        update exam_grade
+        <set>
+            <if test="gradeName!=null and gradeName!=''">
+                grade_name=#{gradeName},
+            </if>
+            <if test="periodId!=0">
+                period_id=#{periodId},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time=#{createTime},
+            </if>
+        </set>
+        where grade_id=#{gradeId}
+    </update>
+    <select id="searchGradeListByPeriodId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_grade g
+        left join exam_class cla on g.grade_id=cla.grade_id
+        left join exam_period p on p.period_id=g.period_id
+        <where>
+            <if test="periodId!=0">
+                and g.period_id=#{periodId}
+            </if>
+        </where>
+        order by g.grade_id desc
+    </select>
+    <select id="searchGradeById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_grade g
+        left join exam_class cla on g.grade_id=cla.grade_id
+        left join exam_period p on p.period_id=g.period_id
+        <where>
+            <if test="gradeId!=0">
+                and g.grade_id=#{gradeId}
+            </if>
+        </where>
+        order by g.grade_id desc
+    </select>
+</mapper>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.ScoreStudentDao">
+    <resultMap id="Base_Result" type="com.library.bexam.entity.ScoreStudentEntity">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="paper_id" jdbcType="INTEGER" property="paperId"/>
+        <result column="class_id" jdbcType="INTEGER" property="classId"/>
+        <result column="student_id" jdbcType="INTEGER" property="studentId"/>
+        <result column="student_realname" jdbcType="VARCHAR" property="studentRealName"/>
+        <result column="student_code" jdbcType="VARCHAR" property="studentCode"/>
+        <result column="level" jdbcType="INTEGER" property="level"/>
+        <result column="score" jdbcType="INTEGER" property="score"/>
+        <result column="ranking" jdbcType="INTEGER" property="ranking"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+    </resultMap>
+
+    <sql id="List_Column">
+        ss.id,
+        ss.paper_id,
+        ss.class_id,
+        ss.student_id,
+        us.student_realname,
+        us.student_code,
+        ss.level,
+        ss.score,
+        ss.ranking,
+        DATE_FORMAT(ss.create_time, '%Y-%m-%d %H:%i:%s') AS create_time
+    </sql>
+
+    <select id="list" resultMap="Base_Result">
+        SELECT
+        <include refid="List_Column"/>
+        FROM exam_score_student ss
+        LEFT JOIN exam_user_student us ON us.student_id=ss.student_id
+        <where>
+            <if test="paperId != null and paperId != ''">
+                AND paper_id=#{paperId}
+            </if>
+            <if test="classId != null and classId != ''">
+                AND class_id=#{classId}
+            </if>
+            <if test="studentId != null and studentId != ''">
+                AND student_id=#{studentId}
+            </if>
+            <if test="level != null and level != ''">
+                AND level=#{level}
+            </if>
+        </where>
+    </select>
+
+    <select id="getStudentCountByClassId" resultType="Integer">
+        SELECT COUNT(student_id) FROM exam_score_student
+        <where>
+            <if test="paperId != null and paperId != ''">
+                AND paper_id=#{paperId}
+            </if>
+            <if test="classId != null and classId != ''">
+                AND class_id=#{classId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getFirstHalf" resultMap="Base_Result">
+        SELECT
+        <include refid="List_Column"/>
+        FROM exam_score_student ss
+        LEFT JOIN exam_user_student us ON us.student_id=ss.student_id
+        <where>
+            <if test="paperId != null and paperId != ''">
+                AND paper_id=#{paperId}
+            </if>
+            <if test="classId != null and classId != ''">
+                AND class_id=#{classId}
+            </if>
+        </where>
+        ORDER BY ranking
+        LIMIT #{firstHalfCount}
+    </select>
+
+    <select id="getSecondHalf" resultMap="Base_Result">
+        SELECT
+        <include refid="List_Column"/>
+        FROM exam_score_student ss
+        LEFT JOIN exam_user_student us ON us.student_id=ss.student_id
+        <where>
+            <if test="paperId != null and paperId != ''">
+                AND paper_id=#{paperId}
+            </if>
+            <if test="classId != null and classId != ''">
+                AND class_id=#{classId}
+            </if>
+        </where>
+        ORDER BY ranking DESC
+        LIMIT #{secondHalfCount}
+    </select>
+
+    <select id="getLastRankingByStudentId" resultType="Integer">
+        SELECT ranking FROM exam_score_student
+        <where>
+            student_id=#{studentId} AND
+            create_time &lt; #{dateTime}
+        </where>
+        ORDER BY create_time DESC
+        LIMIT 1
+    </select>
+</mapper>

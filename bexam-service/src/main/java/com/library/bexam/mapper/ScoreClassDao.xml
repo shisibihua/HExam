@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.ScoreClassDao">
+
+    <resultMap id="Class_Result" type="java.util.Map">
+        <id column="class_id" jdbcType="INTEGER" property="classId"/>
+        <result column="class_name" jdbcType="VARCHAR" property="className"/>
+    </resultMap>
+
+    <resultMap id="Base_Result" type="com.library.bexam.entity.ScoreClassEntity">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="paper_id" jdbcType="INTEGER" property="paperId"/>
+        <result column="class_id" jdbcType="INTEGER" property="classId"/>
+        <result column="student_count" jdbcType="INTEGER" property="studentCount"/>
+        <result column="total_score" jdbcType="INTEGER" property="totalScore"/>
+        <result column="average_score" jdbcType="INTEGER" property="averageScore"/>
+        <result column="highest_score" jdbcType="INTEGER" property="highestScore"/>
+        <result column="lowest_score" jdbcType="INTEGER" property="lowestScore"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+    </resultMap>
+
+    <sql id="Base_Column">
+        id,
+        paper_id,
+        class_id,
+        student_count,
+        total_score,
+        average_score,
+        highest_score,
+        lowest_score,
+        DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS create_time
+    </sql>
+
+    <sql id="All_Class_Info_Column">
+        SUM(student_count) AS studentCount,
+        SUM(total_score) AS totalScore,
+        (SUM(total_score) / SUM(student_count)) AS averageScore,
+        MAX(highest_score) AS highestScore,
+        MIN(lowest_score) AS lowestScore
+    </sql>
+
+    <select id="getClassByPaperId" resultMap="Class_Result">
+        SELECT c.class_id AS classId, c.class_name AS className
+        FROM exam_score_class sc
+        LEFT JOIN exam_class c ON c.class_id=sc.class_id
+        WHERE sc.paper_id=#{paperId}
+    </select>
+
+    <select id="list" resultMap="Base_Result">
+        SELECT
+        <include refid="Base_Column"/>
+        FROM exam_score_class
+        WHERE paper_id=#{paperId}
+    </select>
+
+    <select id="getPaperScoreInfo" resultType="java.util.Map">
+        SELECT
+        <include refid="All_Class_Info_Column"/>
+        FROM exam_score_class
+        WHERE paper_id=#{paperId}
+    </select>
+</mapper>

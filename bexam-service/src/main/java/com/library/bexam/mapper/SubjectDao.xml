@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.SubjectDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.SubjectEntity">
+        <id column="subject_id" jdbcType="INTEGER" property="subjectId" />
+        <result column="subject_name" jdbcType="VARCHAR" property="subjectName" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <association property="periodEntity" javaType="com.library.bexam.form.PeriodForm">
+            <id column="period_id" jdbcType="INTEGER" property="periodId"/>
+            <id column="period_name" jdbcType="VARCHAR" property="periodName"/>
+        </association>
+    </resultMap>
+    <resultMap id="AllResultMap" type="com.library.bexam.entity.SubjectEntity">
+        <id column="subject_id" jdbcType="INTEGER" property="subjectId" />
+        <result column="subject_name" jdbcType="VARCHAR" property="subjectName" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <association property="periodEntity" javaType="com.library.bexam.form.PeriodForm">
+            <id column="period_id" jdbcType="INTEGER" property="periodId"/>
+            <id column="period_name" jdbcType="VARCHAR" property="periodName"/>
+        </association>
+        <collection property="versionFormList" ofType="com.library.bexam.form.VersionForm">
+            <id column="version_id" jdbcType="INTEGER" property="versionId"/>
+            <result column="version_name" jdbcType="VARCHAR" property="versionName"/>
+            <collection property="textBookEntityList" ofType="com.library.bexam.form.TextBookForm">
+                <id column="book_id" jdbcType="INTEGER" property="textBookId"/>
+                <result column="book_name" jdbcType="VARCHAR" property="textBookName"/>
+                <collection property="nodeBookEntityList" ofType="com.library.bexam.form.NodeBookForm">
+                    <id column="node_id" jdbcType="INTEGER" property="nodeId"/>
+                    <result column="node_name" jdbcType="VARCHAR" property="nodeName"/>
+                </collection>
+            </collection>
+        </collection>
+    </resultMap>
+    <sql id="Base_Column_List">
+        distinct sub.subject_id,sub.subject_name,DATE_FORMAT(sub.create_time,'%Y-%m-%d %H:%i:%s') as create_time,p.period_id,
+        p.period_name
+    </sql>
+    <sql id="All_Column_List">
+        distinct sub.subject_id,sub.subject_name,DATE_FORMAT(sub.create_time,'%Y-%m-%d %H:%i:%s') as create_time,p.period_id,
+        p.period_name,ver.version_id,ver.version_name,book.book_id,book.book_name,node.node_id,node.node_name
+    </sql>
+    <insert id="addSubject" parameterType="com.library.bexam.entity.SubjectEntity" useGeneratedKeys="true" keyProperty="subjectId">
+        insert into exam_subject
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="subjectId!=null and subjectId!=''">
+                subject_id,
+            </if>
+            <if test="subjectName!=null and subjectName!=''">
+                subject_name,
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values(" suffixOverrides="," suffix=")">
+            <if test="subjectId!=null and subjectId!=''">
+                #{subjectId},
+            </if>
+            <if test="subjectName!=null and subjectName!=''">
+                #{subjectName},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <insert id="addSubjectList" useGeneratedKeys="true" keyProperty="subjectId">
+        insert into exam_subject(subject_id,subject_name,create_time)
+        values
+            <foreach item="item" collection="list" separator=",">
+                (#{item.subjectId},#{item.subjectName},#{item.createTime})
+            </foreach>
+    </insert>
+    <insert id="addPeriod2Subject" parameterType="com.library.bexam.entity.SubjectEntity">
+        insert into exam_period2subject(period_id,subject_id)
+        values
+        <foreach item="item" collection="list" separator=",">
+            (#{item.periodId},#{item.subjectId})
+        </foreach>
+    </insert>
+    <delete id="deleteSubjectById">
+        delete from exam_subject
+        <where>
+            <if test="subjectIdArr!=null and subjectIdArr.length>0">
+                and subject_id in
+                <foreach item="item" index="index" collection="subjectIdArr" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <delete id="deletePeriod2SubjectBySubjectIds">
+        delete from exam_period2subject
+        <where>
+            <if test="subjectIdArr!=null and subjectIdArr.length>0">
+                and subject_id in
+                <foreach item="item" index="index" collection="subjectIdArr" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <delete id="deletePeriod2SubjectByPeriodIds">
+        delete from exam_period2subject
+        <where>
+            <if test="periodIdArr!=null and periodIdArr.length>0">
+                and period_id in
+                <foreach item="item" index="index" collection="periodIdArr" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <update id="updateSubject" parameterType="com.library.bexam.entity.SubjectEntity">
+        update exam_subject
+        <set>
+            <if test="subjectName!=null and subjectName!=''">
+                subject_name=#{subjectName},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time=#{createTime},
+            </if>
+        </set>
+        where subject_id=#{subjectId}
+    </update>
+    <select id="searchSubjectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_subject sub
+        left join exam_period2subject p2sub on p2sub.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=p2sub.period_id
+        where sub.subject_id=#{subjectId}
+        order by sub.subject_id asc
+    </select>
+    <select id="searchSubjectListByPeriodId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_subject sub
+        left join exam_period2subject p2sub on p2sub.subject_id=sub.subject_id
+        right join exam_period p on p.period_id=p2sub.period_id
+        <where>
+            <if test="periodId!=0">
+                and p2sub.period_id=#{periodId}
+            </if>
+        </where>
+        order by sub.subject_id asc
+    </select>
+    <select id="searchSubjectList" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_subject sub
+        left join exam_period2subject p2sub on p2sub.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=p2sub.period_id
+        order by sub.subject_id asc
+    </select>
+    <select id="searchExamList" parameterType="java.lang.Integer" resultMap="AllResultMap">
+        select <include refid="All_Column_List"/>
+        from exam_subject sub
+        left join exam_period2subject p2sub on p2sub.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=p2sub.period_id
+        left join exam_subject2version s2v on s2v.subject_id=sub.subject_id
+        left join exam_version ver on ver.version_id=s2v.version_id
+        left join exam_version2textbook v2b on v2b.version_id=ver.version_id
+        left join exam_textbook book on book.book_id=v2b.book_id
+        left join exam_textbook2nodebook t2n on t2n.book_id=book.book_id
+        left join exam_nodebook node on node.node_id=t2n.node_id
+        where sub.subject_id=#{subjectId}
+        order by sub.subject_id asc
+    </select>
+</mapper>

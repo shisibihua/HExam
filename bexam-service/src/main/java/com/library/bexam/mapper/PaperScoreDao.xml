@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.PaperScoreDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.PaperScoreEntity">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="paper_id" jdbcType="INTEGER" property="paperId"/>
+        <result column="student_id" jdbcType="INTEGER" property="studentId"/>
+        <result column="paper_content_id" jdbcType="INTEGER" property="paperContentId"/>
+        <result column="score" jdbcType="INTEGER" property="score"/>
+
+        <result column="answer" jdbcType="VARCHAR" property="answer"/>
+
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        id,
+        paper_id,
+        student_id,
+        paper_content_id,
+        score,
+        answer
+    </sql>
+
+    <insert id="add" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO exam_paper_score
+        (
+        paper_id,
+        student_id,
+        paper_content_id,
+        score,
+        answer
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.paperId},
+            #{item.studentId},
+            #{item.paperContentId},
+            #{item.score},
+            #{item.answer}
+            )
+        </foreach>
+    </insert>
+
+    <select id="list" resultMap="BaseResultMap" parameterType="java.util.Map">
+        SELECT
+        <include refid="Column_List"/>
+        FROM exam_paper_score
+        <where>
+            <if test="keyword != null and keyword != ''">
+                INSTR(answer, #{keyword})
+            </if>
+            <if test="paperId != null and paperId != ''">
+                AND paper_id=#{paperId}
+            </if>
+            <if test="studentId != null and studentId != ''">
+                AND student_id=#{studentId}
+            </if>
+            <if test="paperContentId != null and paperContentId != ''">
+                AND paper_content_id=#{paperContentId}
+            </if>
+        </where>
+    </select>
+
+    <select id="get" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Column_List"/>
+        FROM exam_paper p
+        <where>
+            p.paper_id=#{paperId}
+        </where>
+        order by p.paper_id desc
+    </select>
+
+    <delete id="delete">
+        DELETE FROM exam_paper_score
+        <where>
+            <if test="paperIds != null">
+                AND paper_id IN
+                <foreach collection="paperIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="studentIds != null">
+                AND student_id IN
+                <foreach collection="studentIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+
+    <select id="getScoringRateByPaperContentId" resultType="String">
+        SELECT
+        ROUND(SUM(ps.score) / (pc.score * COUNT(ps.score)) * 100 , 1) AS scoringRate
+        FROM exam_paper_score ps
+        LEFT JOIN exam_paper_content pc ON pc.paper_content_id=ps.paper_content_id
+        <where>
+            ps.paper_content_id=#{paperContentId} AND
+            ps.class_id=#{classId}
+        </where>
+    </select>
+
+    <select id="getWrongStudent" resultType="java.util.Map">
+        SELECT
+        us.student_id AS studentId,
+        us.student_realname AS studentRealName
+        FROM exam_paper_score ps
+        LEFT JOIN exam_user_student us ON us.student_id=ps.student_id
+        <where>
+            class_id=#{classId} AND
+            paper_content_id=#{paperContentId} AND
+            score=0
+        </where>
+    </select>
+
+    <select id="getWrongRate" resultType="String">
+        SELECT ROUND(wrong.co / total.co * 100, 1) AS wrongRate
+        FROM
+        (
+        SELECT COUNT(*) AS co FROM exam_paper_score ps
+        <where>
+            class_id=#{classId} AND
+            paper_content_id=#{paperContentId} AND
+            score=0
+        </where>
+        ) wrong,
+        (
+        SELECT COUNT(*) AS co FROM exam_paper_score ps
+        <where>
+            class_id=#{classId} AND
+            paper_content_id=#{paperContentId}
+        </where>
+        ) total
+    </select>
+</mapper>

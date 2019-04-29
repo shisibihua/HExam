@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.QuestionTypeDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.QuestionTypeEntity">
+        <id column="type_id" jdbcType="INTEGER" property="typeId"/>
+        <result column="type_name" jdbcType="VARCHAR" property="typeName"/>
+        <result column="create_time" jdbcType="VARCHAR" property="createTime"/>
+        <result column="subject_id" jdbcType="INTEGER" property="subjectId"/>
+        <result column="subject_name" jdbcType="VARCHAR" property="subjectName"/>
+        <result column="period_id" jdbcType="INTEGER" property="periodId"/>
+        <result column="period_name" jdbcType="VARCHAR" property="periodName"/>
+        <!--<association property="subjectEntity" javaType="com.library.bexam.form.SubjectForm">-->
+        <!--<id column="subject_id"  jdbcType="INTEGER" property="subjectId"/>-->
+        <!--<result column="subject_name" jdbcType="VARCHAR" property="subjectName"/>-->
+        <!--</association>-->
+
+
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        distinct t.type_id,
+        t.type_name,
+        s.subject_id,
+        s.subject_name,
+        p.period_id,
+        p.period_name,
+        t.create_time
+    </sql>
+
+    <select id="list" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM exam_question_type t
+        LEFT JOIN exam_subject2questiontype sq ON sq.type_id=t.type_id
+        LEFT JOIN exam_subject s ON s.subject_id=sq.subject_id
+        left join exam_period2subject p2s on p2s.subject_id=s.subject_id
+        left join exam_period p on p.period_id=p2s.period_id
+        <where>
+            1=1
+            <if test="subjectId!=0">
+                and s.subject_id=#{subjectId}
+            </if>
+        </where>
+        order by t.type_id desc
+    </select>
+
+    <select id="getQuestionTypeById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM exam_question_type t
+        LEFT JOIN exam_subject2questiontype sq ON sq.type_id=t.type_id
+        LEFT JOIN exam_subject s ON s.subject_id=sq.subject_id
+        left join exam_period2subject p2s on p2s.subject_id=s.subject_id
+        left join exam_period p on p.period_id=p2s.period_id
+        <where>
+            t.type_id=#{typeId}
+        </where>
+        order by t.type_id desc
+    </select>
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="typeId">
+        INSERT INTO exam_question_type
+        (
+        type_name,
+        create_time
+        ) VALUE(
+        #{typeName},
+        #{createTime}
+        )
+    </insert>
+
+    <insert id="batchAddForXK" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="typeId">
+        INSERT INTO exam_question_type
+        (
+            type_id,
+            type_name,
+            create_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.typeId},
+                #{item.typeName},
+                #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="batchAdd" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="typeId">
+        INSERT INTO exam_question_type
+        (
+        type_name,
+        create_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.typeName},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="addSubject2QuestionType">
+        INSERT INTO exam_subject2questiontype (
+        subject_id,
+        type_id
+        ) VALUE (
+        #{subjectId},
+        #{questionTypeId}
+        )
+    </insert>
+
+    <insert id="batchAddSubject2QuestionType">
+        INSERT INTO exam_subject2questiontype (
+        subject_id,
+        type_id
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.subjectId},
+            #{item.typeId}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="delete">
+        delete qt from exam_question_type qt
+        <where>
+            and qt.type_id in
+            <foreach collection="array" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </delete>
+
+    <delete id="deleteSubject2QuestionType">
+        DELETE sqt FROM exam_subject2questiontype sqt
+        <where>
+            AND sqt.type_id IN
+            <foreach collection="array" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </delete>
+
+    <update id="update" parameterType="com.library.bexam.entity.QuestionTypeEntity">
+        update exam_question_type
+        <set>
+            <if test="typeName != null and typeName != ''">
+                type_name=#{typeName},
+            </if>
+        </set>
+        where type_id=#{typeId}
+    </update>
+</mapper>

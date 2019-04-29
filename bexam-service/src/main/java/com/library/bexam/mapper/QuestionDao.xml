@@ -1,0 +1,612 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.QuestionDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.QuestionEntity">
+        <id column="question_id" jdbcType="INTEGER" property="questionId"/>
+        <id column="subject_id" jdbcType="INTEGER" property="subjectId"/>
+        <result column="question_type_id" jdbcType="INTEGER" property="questionTypeId"/>
+        <result column="question_difficult" jdbcType="VARCHAR" property="questionDifficult"/>
+        <result column="question_comment" jdbcType="VARCHAR" property="questionComment"/>
+        <result column="question_point_id" jdbcType="INTEGER" property="questionPointId"/>
+        <result column="question_point2_id" jdbcType="INTEGER" property="questionPointId2"/>
+        <result column="question_point3_id" jdbcType="INTEGER" property="questionPointId3"/>
+        <result column="version_id" jdbcType="INTEGER" property="questionVersionId"/>
+        <result column="book_id" jdbcType="INTEGER" property="questionBookId"/>
+        <result column="node_id" jdbcType="INTEGER" property="questionNodeId"/>
+        <result column="node2_id" jdbcType="INTEGER" property="questionNodeId2"/>
+        <result column="node3_id" jdbcType="INTEGER" property="questionNodeId3"/>
+        <result column="question_source" jdbcType="VARCHAR" property="questionSource"/>
+        <result column="question_content" jdbcType="INTEGER" property="questionContent"/>
+        <result column="question_option" jdbcType="INTEGER" property="questionOption"/>
+        <result column="question_answer" jdbcType="INTEGER" property="questionAnswer"/>
+        <result column="question_analysis" jdbcType="INTEGER" property="questionAnalysis"/>
+        <result column="question_storage" jdbcType="INTEGER" property="storage"/>
+        <result column="question_public" jdbcType="INTEGER" property="isPublic"/>
+
+        <result column="usage_count" jdbcType="INTEGER" property="usageCount"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+
+        <result column="type_name" jdbcType="VARCHAR" property="questionTypeName"/>
+        <result column="difficult_name" jdbcType="VARCHAR" property="questionDifficultName"/>
+        <result column="point_name" jdbcType="VARCHAR" property="questionPointName"/>
+        <result column="version_name" jdbcType="VARCHAR" property="questionVersionName"/>
+        <result column="book_name" jdbcType="VARCHAR" property="questionBookName"/>
+        <result column="node_name" jdbcType="VARCHAR" property="questionNodeName"/>
+
+    </resultMap>
+
+    <resultMap id="AnswerAndAnalysis" type="java.util.Map">
+        <result column="question_answer" jdbcType="INTEGER" property="questionAnswer"/>
+        <result column="question_analysis" jdbcType="INTEGER" property="questionAnalysis"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        q.question_id,
+        q.subject_id,
+        q.question_type_id,
+        q.question_difficult,
+        q.question_comment,
+        q.question_point_id,
+        q.question_point2_id,
+        q.question_point3_id,
+        q.version_id,
+        q.book_id,
+        q.node_id,
+        q.node2_id,
+        q.node3_id,
+        q.question_source,
+        q.question_content,
+        q.question_option,
+        q.question_answer,
+        q.question_storage,
+        q.question_public,
+        q.question_analysis,
+        q.usage_count,
+        DATE_FORMAT(q.create_time, '%Y-%m-%d %H:%i:%s') as create_time,
+        DATE_FORMAT(q.update_time, '%Y-%m-%d %H:%i:%s') as update_time,
+        t.type_name,
+        d.difficult_name,
+        p.point_name,
+        v.version_name,
+        b.book_name,
+        n.node_name,
+        s.subject_name
+    </sql>
+
+    <insert id="batchAdd" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="questionId">
+        INSERT INTO exam_question
+        (
+        question_type_id,
+        subject_id,
+        question_difficult,
+        question_point_id,
+        question_point2_id,
+        question_point3_id,
+        version_id,
+        book_id,
+        node_id,
+        node2_id,
+        node3_id,
+        question_source,
+        question_content,
+        question_option,
+        question_answer,
+        question_analysis,
+        question_storage,
+        question_public,
+        create_time,
+        update_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.questionTypeId},
+            #{item.subjectId},
+            #{item.questionDifficult},
+            #{item.questionPointId},
+            #{item.questionPointId2},
+            #{item.questionPointId3},
+            #{item.questionVersionId},
+            #{item.questionBookId},
+            #{item.questionNodeId},
+            #{item.questionNodeId2},
+            #{item.questionNodeId3},
+            #{item.questionSource},
+            #{item.questionContent},
+            #{item.questionOption},
+            #{item.questionAnswer},
+            #{item.questionAnalysis},
+            1,
+            0,
+            #{item.createTime},
+            #{item.updateTime}
+            )
+        </foreach>
+    </insert>
+    <insert id="add" parameterType="com.library.bexam.entity.QuestionEntity" useGeneratedKeys="true"
+            keyProperty="questionId">
+        INSERT INTO exam_question
+        (
+        question_id,
+        question_type_id,
+        subject_id,
+        question_difficult,
+        question_point_id,
+        version_id,
+        book_id,
+        node_id,
+        node2_id,
+        node3_id,
+        question_source,
+        question_content,
+        question_option,
+        question_answer,
+        question_analysis,
+        question_storage,
+        question_public,
+        create_time,
+        update_time
+        ) VALUES
+            (
+            #{questionId},
+            #{questionTypeId},
+            #{subjectId},
+            #{questionDifficult},
+            #{questionPointId},
+            #{questionVersionId},
+            #{questionBookId},
+            #{questionNodeId},
+            #{questionNodeId2},
+            #{questionNodeId3},
+            #{questionSource},
+            #{questionContent},
+            #{questionOption},
+            #{questionAnswer},
+            #{questionAnalysis},
+            0,
+            1,
+            #{createTime},
+            #{updateTime}
+            )
+    </insert>
+    <select id="list" resultMap="BaseResultMap" parameterType="java.util.Map">
+        SELECT *
+        FROM
+        (
+            SELECT
+            <include refid="Column_List"/>
+            FROM exam_question q
+            left join exam_question_type t on t.type_id=q.question_type_id
+            left join exam_question_difficult d on d.difficult_id=q.question_difficult
+            left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+            left join exam_version v on v.version_id=q.version_id
+            left join exam_textbook b on b.book_id=q.book_id
+            left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+            left join exam_subject s on s.subject_id=q.subject_id
+            <where>
+                q.subject_id=#{subjectId}
+                <if test="questionPointId != null and questionPointId != ''">
+                    AND q.question_point_id=#{questionPointId}
+                </if>
+                <if test="questionPointId2 != null and questionPointId2 != ''">
+                    AND q.question_point2_id=#{questionPointId2}
+                </if>
+                <if test="questionPointId3 != null and questionPointId3 != ''">
+                    AND q.question_point3_id=#{questionPointId3}
+                </if>
+                <if test="questionVersionId != null and questionVersionId != ''">
+                    AND q.version_id=#{questionVersionId}
+                </if>
+                <if test="questionBookId != null and questionBookId != ''">
+                    AND q.book_id=#{questionBookId}
+                </if>
+                <if test="questionNodeId != null and questionNodeId != ''">
+                    AND q.node_id=#{questionNodeId}
+                </if>
+                <if test="questionNodeId2 != null and questionNodeId2 != ''">
+                    AND q.node2_id=#{questionNodeId2}
+                </if>
+                <if test="questionNodeId3 != null and questionNodeId3 != ''">
+                    AND q.node3_id=#{questionNodeId3}
+                </if>
+                <if test="questionDifficult != null and questionDifficult != ''">
+                    AND q.question_difficult=#{questionDifficult}
+                </if>
+                <if test="questionTypeId != null and questionTypeId != ''">
+                    AND q.question_type_id=#{questionTypeId}
+                </if>
+                <if test="keyword != null and keyword != ''">
+                    AND (
+                    INSTR(q.question_content, #{keyword})
+                    OR INSTR(q.question_option, #{keyword})
+                    OR INSTR(q.question_answer, #{keyword})
+                    OR INSTR(q.question_analysis, #{keyword})
+                    )
+                </if>
+            </where>
+            LIMIT #{currentIndex},#{pageSize}
+        ) as question
+        <if test="sortType!=null">
+            <choose>
+                <when test="sortType==0">
+                    order by usage_count desc,update_time desc
+                </when>
+                <when test="sortType==1">
+                    order by update_time desc
+                </when>
+                <otherwise>
+                    order by usage_count desc
+                </otherwise>
+            </choose>
+        </if>
+    </select>
+    <select id="getTotalCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+        SELECT count(q.question_id)
+        FROM exam_question q
+        <where>
+            <if test="questionPointId != null and questionPointId != ''">
+                q.question_point_id=#{questionPointId}
+            </if>
+            <if test="questionPointId2 != null and questionPointId2 != ''">
+                q.question_point2_id=#{questionPointId2}
+            </if>
+            <if test="questionPointId3 != null and questionPointId3 != ''">
+                q.question_point3_id=#{questionPointId3}
+            </if>
+            <if test="questionVersionId != null and questionVersionId != ''">
+                AND q.version_id=#{questionVersionId}
+            </if>
+            <if test="questionBookId != null and questionBookId != ''">
+                AND q.book_id=#{questionBookId}
+            </if>
+            <if test="questionNodeId != null and questionNodeId != ''">
+                AND q.node_id=#{questionNodeId}
+            </if>
+            <if test="questionNodeId2 != null and questionNodeId2 != ''">
+                AND q.node2_id=#{questionNodeId2}
+            </if>
+            <if test="questionNodeId3 != null and questionNodeId3 != ''">
+                AND q.node3_id=#{questionNodeId3}
+            </if>
+            <if test="questionDifficult != null and questionDifficult != ''">
+                AND q.question_difficult=#{questionDifficult}
+            </if>
+            <if test="questionTypeId != null and questionTypeId != ''">
+                AND q.question_type_id=#{questionTypeId}
+            </if>
+            <if test="subjectId != null and subjectId != ''">
+                AND q.subject_id=#{subjectId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                INSTR(q.question_content, #{keyword})
+                OR INSTR(q.question_option, #{keyword})
+                OR INSTR(q.question_answer, #{keyword})
+                OR INSTR(q.question_analysis, #{keyword})
+                )
+            </if>
+        </where>
+    </select>
+    <select id="getQuestionById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Column_List"/>
+        FROM exam_question q
+        left join exam_question_type t on t.type_id=q.question_type_id
+        left join exam_question_difficult d on d.difficult_id=q.question_difficult
+        left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+        left join exam_version v on v.version_id=q.version_id
+        left join exam_textbook b on b.book_id=q.book_id
+        left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+        left join exam_subject s on s.subject_id=q.subject_id
+        <where>
+            q.question_id=#{questionId}
+        </where>
+    </select>
+
+    <update id="update" parameterType="com.library.bexam.entity.QuestionEntity">
+        UPDATE exam_question
+        <set>
+            <if test="subjectId!=0">
+                subject_id=#{subjectId},
+            </if>
+            <if test="questionTypeId!=null and questionTypeId!=''">
+                question_type_id=#{questionTypeId},
+            </if>
+            <if test="questionDifficult!=null and questionDifficult!=''">
+                question_difficult=#{questionDifficult},
+            </if>
+            <if test="questionPointId!=null and questionPointId!=''">
+                question_point_id=#{questionPointId},
+            </if>
+            <if test="questionVersionId!=null and questionVersionId!=''">
+                version_id=#{questionVersionId},
+            </if>
+            <if test="questionBookId!=null and questionBookId!=''">
+                book_id=#{questionBookId},
+            </if>
+            <if test="questionNodeId!=null and questionNodeId!=''">
+                node_id=#{questionNodeId},
+            </if>
+            <if test="questionNodeId2!=null and questionNodeId2!=''">
+                node2_id=#{questionNodeId2},
+            </if>
+            <if test="questionNodeId3!=null and questionNodeId3!=''">
+                node3_id=#{questionNodeId3},
+            </if>
+            <if test="questionSource!=null and questionSource!=''">
+                question_source=#{questionSource},
+            </if>
+            <if test="questionContent!=null and questionContent!=''">
+                question_content=#{questionContent},
+            </if>
+            <if test="questionOption!=null and questionOption!=''">
+                question_option=#{questionOption},
+            </if>
+            <if test="questionAnswer!=null and questionAnswer!=''">
+                question_answer=#{questionAnswer},
+            </if>
+            <if test="questionAnalysis!=null and questionAnalysis!=''">
+                question_analysis=#{questionAnalysis},
+            </if>
+            <if test="storage!=null and storage!=''">
+                question_storage=#{storage}
+            </if>
+            <if test="updateTime!=null and updateTime!=''">
+                update_time=#{updateTime}
+            </if>
+        </set>
+        <where>
+            question_id=#{questionId}
+        </where>
+    </update>
+
+    <delete id="delete">
+        DELETE q FROM exam_question q
+        left join exam_user2question u2q on q.question_id=u2q.question_id
+        left join exam_user u on u.user_id=u2q.user_id
+        <where>
+            AND question_id IN
+            <foreach collection="array" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            and u.user_id=#{userId}
+        </where>
+    </delete>
+    <select id="searchQuestionListBySubId" resultMap="BaseResultMap">
+        select
+        <include refid="Column_List"/>
+        from exam_question q
+        left join exam_question_type t on t.type_id=q.question_type_id
+        left join exam_question_difficult d on d.difficult_id=q.question_difficult
+        left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+        left join exam_version v on v.version_id=q.version_id
+        left join exam_textbook b on b.book_id=q.book_id
+        left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+        left join exam_subject s on s.subject_id=q.subject_id
+        where q.subject_id=#{subjectId}
+        limit #{firstIndex},#{pageSize}
+    </select>
+    <update id="addQuestionAnswerAndAnalyze" parameterType="com.library.bexam.entity.QuestionEntity">
+        update exam_question q
+        <set>
+            <if test="questionAnswer!=null and questionAnswer!=''">
+                q.question_answer=#{questionAnswer},
+            </if>
+            <if test="questionAnalysis!=null and questionAnalysis!=''">
+                q.question_analysis=#{questionAnalysis},
+            </if>
+        </set>
+        where q.question_id=#{questionId}
+    </update>
+
+    <select id="getAnswerAndAnalysis" resultMap="AnswerAndAnalysis">
+        SELECT question_answer, question_analysis FROM exam_question
+        <where>
+            question_id=#{questionId}
+        </where>
+    </select>
+    <insert id="collectQuestions">
+        insert into exam_user2question(user_id,question_id,type)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId},#{item.questionId},#{item.type})
+        </foreach>
+    </insert>
+
+    <select id="searchQuestionsByUId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Column_List"/>
+        from exam_question q
+        left join exam_question_type t on t.type_id=q.question_type_id
+        left join exam_question_difficult d on d.difficult_id=q.question_difficult
+        left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+        left join exam_version v on v.version_id=q.version_id
+        left join exam_textbook b on b.book_id=q.book_id
+        left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+        left join exam_user2question u2q on u2q.question_id=q.question_id
+        left join exam_user u on u.user_id=u2q.user_id
+        left join exam_subject s on s.subject_id=q.subject_id
+        where u.user_id=#{userId} and u2q.type=#{type}
+        order by t.type_name asc
+    </select>
+    <select id="searchQuestionsBasket" resultType="java.util.Map">
+        SELECT t.type_id as typeId,t.type_name as typeName,count(q.question_id) AS count
+        FROM
+	          exam_question q
+        LEFT JOIN exam_question_type t ON t.type_id = q.question_type_id
+        LEFT JOIN exam_user2question u2q ON u2q.question_id = q.question_id
+        LEFT JOIN exam_user u ON u.user_id = u2q.user_id
+        WHERE
+            u.user_id = #{userId} and u2q.type = #{type}
+        GROUP BY q.question_type_id
+    </select>
+
+    <delete id="delCollectQuestions">
+        delete from exam_user2question
+        <where>
+            <if test="userId!=0">
+                and user_id=#{userId}
+            </if>
+            <if test="questionId!=null">
+                and question_id=#{questionId}
+            </if>
+            <if test="type!=null">
+                and type=#{type}
+            </if>
+        </where>
+    </delete>
+
+    <select id="searchAllCollectQuestions" resultType="java.util.Map">
+        select distinct question_id,user_id,type from exam_user2question
+        where user_id=#{userId} and type <![CDATA[<>]]> 2
+    </select>
+    <select id="exitsCollectQuestions" resultType="java.lang.Integer">
+        select count(*) from exam_user2question
+        where user_id=#{userId} and question_id=#{questionId} and type=#{type}
+    </select>
+    <delete id="delQuestionsBasketByTypeId">
+        delete u2q from exam_user2question u2q
+        left join exam_question q on q.question_id=u2q.question_id
+        left join exam_question_type t on t.type_id=q.question_type_id
+        where u2q.user_id=#{userId} and t.type_id=#{typeId} and u2q.type=1
+    </delete>
+    <insert id="addUser2Questions">
+        insert into exam_user2question(user_id,question_id,type)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (
+              #{userId},
+              #{questionId},
+              2
+            )
+        </foreach>
+    </insert>
+    <delete id="delUser2Question">
+        delete from exam_user2question
+        where question_id in
+        <foreach collection="questionIdsArr" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and type=2 and user_id=#{userId}
+    </delete>
+    <update id="changeQuestionPublic">
+        update exam_question q
+        left join exam_user2question u2q on u2q.question_id=q.question_id
+        set q.question_public=#{isPublic}
+        where u2q.user_id=#{userId} and q.question_id=#{questionId} and u2q.type=2
+    </update>
+    <select id="searchQuestionsByUIdAndPId" resultMap="BaseResultMap">
+        select <include refid="Column_List"/>
+        from exam_question q
+        left join exam_question_type t on t.type_id=q.question_type_id
+        left join exam_question_difficult d on d.difficult_id=q.question_difficult
+        left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+        left join exam_version v on v.version_id=q.version_id
+        left join exam_textbook b on b.book_id=q.book_id
+        left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+        left join exam_user2question u2q on u2q.question_id=q.question_id
+        left join exam_user u on u.user_id=u2q.user_id
+        left join exam_subject s on s.subject_id=q.subject_id
+        <where>
+            and u2q.type=2 and q.question_storage=1
+            <if test="userId!=0">
+                and u.user_id=#{userId}
+            </if>
+            <if test="isPublic!=null and isPublic!=''">
+                and q.question_public=#{isPublic}
+            </if>
+            <if test="questionPointId!=null and questionPointId!='' and questionPointId!=0">
+                and q.question_point_id=#{questionPointId}
+            </if>
+            <if test="questionPointId2 !=null and questionPointId2 !='' and questionPointId2!=0">
+                and q.question_point2_id=#{questionPointId2}
+            </if>
+            <if test="questionPointId3!=null and questionPointId3!='' and questionPointId3!=0">
+                and q.question_point3_id=#{questionPointId3}
+            </if>
+        </where>
+        limit #{firstIndex},#{pageSize}
+    </select>
+    <select id="searchUploadQuestionsCount" resultType="java.lang.Integer">
+        select count(q.question_id) as count
+        from exam_question q
+        left join exam_question_type t on t.type_id=q.question_type_id
+        left join exam_question_difficult d on d.difficult_id=q.question_difficult
+        left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+        left join exam_version v on v.version_id=q.version_id
+        left join exam_textbook b on b.book_id=q.book_id
+        left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+        left join exam_user2question u2q on u2q.question_id=q.question_id
+        left join exam_user u on u.user_id=u2q.user_id
+        left join exam_subject s on s.subject_id=q.subject_id
+        <where>
+            and u2q.type=2 and q.question_storage=1
+            <if test="userId!=0">
+                and u.user_id=#{userId}
+            </if>
+            <if test="isPublic!=null and isPublic!=''">
+                and q.question_public=#{isPublic}
+            </if>
+            <if test="questionPointId!=null and questionPointId!='' and questionPointId!=0">
+                and q.question_point_id=#{questionPointId}
+            </if>
+            <if test="questionPointId2!=null and questionPointId2!='' and questionPointId2!=0">
+                and q.question_point2_id=#{questionPointId2}
+            </if>
+            <if test="questionPointId3!=null and questionPointId3!='' and questionPointId3!=0">
+                and q.question_point3_id=#{questionPointId3}
+            </if>
+        </where>
+    </select>
+    <select id="searchPublicQuestions" resultMap="BaseResultMap">
+        select <include refid="Column_List"/>
+        from exam_question q
+        left join exam_question_type t on t.type_id=q.question_type_id
+        left join exam_question_difficult d on d.difficult_id=q.question_difficult
+        left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+        left join exam_version v on v.version_id=q.version_id
+        left join exam_textbook b on b.book_id=q.book_id
+        left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+        left join exam_user2question u2q on u2q.question_id=q.question_id
+        left join exam_user u on u.user_id=u2q.user_id
+        left join exam_subject s on s.subject_id=q.subject_id
+        <where>
+            and q.question_public=1
+            <if test="questionPointId!=null and questionPointId!='' and questionPointId!=0">
+                and q.question_point_id=#{questionPointId}
+            </if>
+            <if test="questionPointId2!=null and questionPointId2!='' and questionPointId2!=0">
+                and q.question_point2_id=#{questionPointId2}
+            </if>
+            <if test="questionPointId3!=null and questionPointId3!='' and questionPointId3!=0">
+                and q.question_point3_id=#{questionPointId3}
+            </if>
+        </where>
+        limit #{firstIndex},#{pageSize}
+    </select>
+    <select id="searchPublicQuestionsCount" resultType="java.lang.Integer">
+        select count(q.question_id) as countnull
+        from exam_question q
+        left join exam_question_type t on t.type_id=q.question_type_id
+        left join exam_question_difficult d on d.difficult_id=q.question_difficult
+        left join exam_point p on (p.point_id=q.question_point_id or p.point_id=q.question_point2_id or p.point_id=q.question_point3_id)
+        left join exam_version v on v.version_id=q.version_id
+        left join exam_textbook b on b.book_id=q.book_id
+        left join exam_nodebook n on (n.node_id=q.node_id or n.node_id=q.node2_id or n.node_id=q.node3_id)
+        left join exam_user2question u2q on u2q.question_id=q.question_id
+        left join exam_user u on u.user_id=u2q.user_id
+        left join exam_subject s on s.subject_id=q.subject_id
+        <where>
+            and q.question_public=1
+            <if test="questionPointId!=null and questionPointId!='' and questionPointId!=0">
+                and q.question_point_id=#{questionPointId}
+            </if>
+            <if test="questionPointId2!=null and questionPointId2!='' and questionPointId2!=0">
+                and q.question_point2_id=#{questionPointId2}
+            </if>
+            <if test="questionPointId3!=null and questionPointId3!='' and questionPointId3!=0">
+                and q.question_point3_id=#{questionPointId3}
+            </if>
+        </where>
+    </select>
+</mapper>

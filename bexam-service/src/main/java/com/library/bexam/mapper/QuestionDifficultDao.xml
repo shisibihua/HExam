@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.QuestionDifficultDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.QuestionDifficultEntity">
+        <id column="difficult_id" jdbcType="INTEGER" property="difficultId"/>
+        <result column="difficult_name" jdbcType="VARCHAR" property="difficultName"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column">
+        distinct difficult_id,
+        difficult_name,
+        DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') as create_time,
+        DATE_FORMAT(update_time, '%Y-%m-%d %H:%i:%s') as update_time
+    </sql>
+
+    <select id="list" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column"/>
+        FROM exam_question_difficult
+    </select>
+
+    <select id="getQuestionDifficultById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column"/>
+        FROM exam_question_difficult
+        <where>
+            difficult_id=#{questionDifficultById}
+        </where>
+    </select>
+
+    <insert id="add" useGeneratedKeys="true" keyProperty="difficultId">
+        INSERT INTO exam_question_difficult (
+        difficult_name,
+        create_time,
+        update_time
+        ) VALUE (
+        #{difficultName},
+        #{createTime},
+        #{updateTime}
+        )
+    </insert>
+
+    <delete id="delete">
+        DELETE qd FROM exam_question_difficult qd
+        <where>
+            and qd.difficult_id in
+            <foreach collection="array" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </delete>
+
+    <update id="update" parameterType="com.library.bexam.entity.QuestionDifficultEntity">
+        update exam_question_difficult
+        <set>
+            <if test="difficultName != null and difficultName != ''">
+                difficult_name=#{difficultName},
+            </if>
+        </set>
+        where difficult_id=#{difficultId}
+    </update>
+</mapper>

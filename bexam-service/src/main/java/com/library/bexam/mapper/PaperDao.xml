@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.PaperDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.PaperEntity">
+        <id column="paper_id" jdbcType="INTEGER" property="paperId"/>
+        <result column="paper_title" jdbcType="INTEGER" property="paperTitle"/>
+        <result column="paper_sub_title" jdbcType="VARCHAR" property="paperSubTitle"/>
+        <result column="type_id" jdbcType="VARCHAR" property="typeId"/>
+        <result column="subject_id" jdbcType="INTEGER" property="subjectId"/>
+
+        <result column="paper_time" jdbcType="INTEGER" property="paperTime"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="paper_extend" jdbcType="INTEGER" property="paperExtend"/>
+
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Column_List">
+        p.paper_id,
+        p.paper_title,
+        p.paper_sub_title,
+        p.type_id,
+        p.subject_id,
+        p.paper_time,
+        p.user_id,
+        p.paper_extend,
+        DATE_FORMAT(P.create_time, '%Y-%m-%d %H:%i:%s'),
+        DATE_FORMAT(P.update_time, '%Y-%m-%d %H:%i:%s')
+    </sql>
+
+    <insert id="add" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="paperId">
+        INSERT INTO exam_paper
+        (
+        paper_title,
+        paper_sub_title,
+        type_id,
+        subject_id,
+        paper_time,
+        user_id,
+        paper_extend,
+        create_time,
+        update_time
+        )
+        VALUE
+        <foreach collection="list" item="item" separator=",">
+          (
+            #{item.paperTitle},
+            #{item.paperSubTitle},
+            #{item.typeId},
+            #{item.subjectId},
+            #{item.paperTime},
+            #{item.userId},
+            #{item.paperExtend},
+            #{item.createTime},
+            #{item.updateTime}
+          )
+        </foreach>
+    </insert>
+
+    <select id="list" resultMap="BaseResultMap" parameterType="java.util.Map">
+        SELECT
+        <include refid="Column_List"/>
+        FROM exam_paper p
+        <where>
+            <if test="keyword != null and keyword != ''">
+                INSTR(paper_title, #{keyword})
+            </if>
+        </where>
+        LIMIT #{currentIndex},#{pageSize}
+    </select>
+
+    <select id="get" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Column_List"/>
+        FROM exam_paper p
+        <where>
+            p.paper_id=#{paperId}
+        </where>
+        order by p.paper_id desc
+    </select>
+
+    <update id="update" parameterType="com.library.bexam.entity.PaperEntity">
+        UPDATE exam_paper
+        <set>
+            <if test="paperTitle!=null and paperTitle!=''">
+                paper_title=#{paperTitle},
+            </if>
+            <if test="paperSubTitle!=null and paperSubTitle!=''">
+                paper_sub_title=#{paperSubTitle},
+            </if>
+            <if test="typeId!=null and typeId!=''">
+                type_id=#{typeId},
+            </if>
+            <if test="subjectId!=null and subjectId!=''">
+                subject_id=#{subjectId},
+            </if>
+            <if test="paperTime!=null and paperTime!=''">
+                paper_time=#{paperTime},
+            </if>
+            <if test="paperExtend!=null and paperExtend!=''">
+                paper_extend=#{paperExtend},
+            </if>
+            <if test="updateTime!=null and updateTime!=''">
+                update_time=#{updateTime},
+            </if>
+        </set>
+        <where>
+            paper_id=#{paperId}
+        </where>
+    </update>
+
+    <delete id="delete">
+        DELETE FROM exam_paper
+        <where>
+            AND paper_id IN
+            <foreach collection="array" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </delete>
+</mapper>

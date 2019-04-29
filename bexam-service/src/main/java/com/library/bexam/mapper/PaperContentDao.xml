@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.PaperContentDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.PaperContentEntity">
+        <id column="paper_content_id" jdbcType="INTEGER" property="paperContentId"/>
+        <result column="content_type" jdbcType="INTEGER" property="contentType"/>
+        <result column="score" jdbcType="INTEGER" property="score"/>
+        <result column="total_score" jdbcType="INTEGER" property="totalScore"/>
+        <result column="parent_id" jdbcType="INTEGER" property="parentId"/>
+        <result column="question_id" jdbcType="INTEGER" property="questionId"/>
+        <result column="paper_id" jdbcType="INTEGER" property="paperId"/>
+        <result column="height" jdbcType="INTEGER" property="height"/>
+    </resultMap>
+
+    <sql id="Base_Column">
+        paper_content_id as paperContentId,
+        content_type as contentType,
+        score,
+        total_score as totalScore,
+        parent_id as parentId,
+        question_id as questionId,
+        paper_id as paperId,
+        height
+    </sql>
+
+    <insert id="addTitle" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="paperContentId">
+        INSERT INTO exam_paper_content
+        (
+        content_type,
+        total_score,
+        question_id,
+        paper_id
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            '0',
+            #{item.totalScore},
+            #{item.questionId},
+            #{item.paperId}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="addQuestion" parameterType="java.util.List">
+        INSERT INTO exam_paper_content
+        (
+        content_type,
+        score,
+        total_score,
+        parent_id,
+        question_id,
+        paper_id,
+        height
+        ) VALUES
+        <foreach collection="questionList" item="item" separator=",">
+            (
+            '1',
+            #{item.score},
+            #{item.totalScore},
+            #{parentId},
+            #{item.questionId},
+            #{paperId},
+            #{item.height}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteByPaperIds">
+        DELETE FROM exam_paper_content
+        <where>
+            paper_id IN
+            <foreach collection="array" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </where>
+    </delete>
+
+    <update id="update">
+        UPDATE exam_paper_content
+        <set>
+            <if test="score != null and score != ''">
+                score=#{score},
+            </if>
+            <if test="totalScore != null and totalScore != ''">
+                total_score=#{totalScore},
+            </if>
+            <if test="parentId != null and parentId != ''">
+                parent_id=#{parentId},
+            </if>
+            <if test="questionId != null and questionId != ''">
+                question_id=#{questionId},
+            </if>
+            <if test="paperId != null and paperId != ''">
+                paper_id=#{paperId},
+            </if>
+            <if test="height != null and height != ''">
+                height=#{height},
+            </if>
+        </set>
+        <where>
+            paper_content_id=#{paperContentId}
+        </where>
+    </update>
+
+    <select id="getTitleListByPaperId" resultType="com.library.bexam.entity.PaperContentEntity">
+        SELECT
+        <include refid="Base_Column"/>
+        FROM exam_paper_content
+        <where>
+            paper_id=#{paperId} AND
+            content_type='0'
+        </where>
+    </select>
+
+    <select id="getQuestionListByTitleId" resultType="com.library.bexam.entity.PaperContentEntity">
+        SELECT
+        <include refid="Base_Column"/>
+        FROM exam_paper_content
+        <where>
+            parent_id=#{titleId}
+        </where>
+    </select>
+    <update id="updateQuestionUseCount">
+        update exam_question q
+        left join exam_paper_content content on q.question_id=content.question_id
+        <set>
+            q.usage_count=q.usage_count+1,
+        </set>
+        <where>
+            content.question_id in
+            <foreach collection="list" item="item" open="(" separator="," close=")">
+                #{item.questionId}
+            </foreach>
+        </where>
+    </update>
+
+    <select id="getQuestionByPaperId" resultType="java.util.Map">
+        SELECT
+        paper_content_id AS paperContentId,
+        question_id AS questionId
+        FROM exam_paper_content
+        <where>
+            paper_id=#{paperId} AND
+            content_type='1'
+        </where>
+    </select>
+
+    <select id="get" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column"/>
+        FROM exam_paper_content
+        <where>
+            paper_content_id=#{paperContentId}
+        </where>
+    </select>
+</mapper>

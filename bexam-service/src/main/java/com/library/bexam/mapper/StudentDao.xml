@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.StudentDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.StudentEntity">
+        <id column="student_id" jdbcType="INTEGER" property="studentId" />
+        <result column="student_realname" jdbcType="VARCHAR" property="realName" />
+        <result column="student_code" jdbcType="VARCHAR" property="code" />
+        <result column="student_gender" jdbcType="INTEGER" property="gender" />
+        <result column="student_age" jdbcType="INTEGER" property="age" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <association property="classEntity" javaType="com.library.bexam.form.ClassForm">
+            <id column="class_id"  jdbcType="INTEGER" property="classId"/>
+            <result column="class_name" jdbcType="VARCHAR" property="className"/>
+            <result column="grade_id" jdbcType="INTEGER" property="gradeId"/>
+        </association>
+    </resultMap>
+   <!--查询组织机构树-->
+    <resultMap id="OrgResultMap" type="com.library.bexam.entity.SchoolEntity">
+        <id column="school_id" jdbcType="INTEGER" property="schoolId"/>
+        <result column="school_name" jdbcType="VARCHAR" property="schoolName"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <collection property="periodEntityList" ofType="com.library.bexam.entity.PeriodEntity">
+            <id column="period_id" jdbcType="INTEGER" property="periodId"/>
+            <result column="period_name" jdbcType="VARCHAR" property="periodName"/>
+            <result column="school_id" jdbcType="INTEGER" property="schoolId"/>
+            <collection property="gradeList" ofType="com.library.bexam.entity.GradeEntity">
+                <id column="grade_id" jdbcType="INTEGER" property="gradeId"/>
+                <result column="grade_name" jdbcType="VARCHAR" property="gradeName"/>
+                <result column="period_id" jdbcType="INTEGER" property="periodId"/>
+                <collection property="classEntityList" ofType="com.library.bexam.form.ClassForm">
+                    <id column="class_id" jdbcType="INTEGER" property="classId"/>
+                    <result column="class_name" jdbcType="VARCHAR" property="className" />
+                    <result column="grade_id" jdbcType="INTEGER" property="gradeId"/>
+                </collection>
+            </collection>
+        </collection>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        distinct stu.student_id,stu.student_realname,stu.student_code,stu.student_gender,stu.student_age,
+        DATE_FORMAT(stu.create_time,'%Y-%m-%d %H:%i:%s') as create_time,cla.class_id,cla.class_name,cla.grade_id
+    </sql>
+    <!--查询组织机构树-->
+    <sql id="Org_Column_List">
+        sch.school_id,sch.school_name,DATE_FORMAT(sch.create_time,'%Y-%m-%d %H:%i:%s') as create_time,p.period_id,p.period_name,
+        g.grade_id,g.grade_name,cla.class_id,cla.class_name
+    </sql>
+    <insert id="addStudent" parameterType="com.library.bexam.entity.StudentEntity"  useGeneratedKeys="true"
+            keyColumn="student_id" keyProperty="studentId">
+        insert into exam_user_student
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="realName != null and realName!=''">
+                student_realname,
+            </if>
+            <if test="code != null and code!=''">
+                student_code,
+            </if>
+            <if test="gender!=null">
+                student_gender,
+            </if>
+            <if test="age != null">
+                student_age,
+            </if>
+            <if test="createTime != null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="realName != null and realName!=''">
+                #{realName},
+            </if>
+            <if test="code != null and code!=''">
+                #{code},
+            </if>
+            <if test="gender!=null">
+                #{gender},
+            </if>
+            <if test="age != null">
+                #{age},
+            </if>
+            <if test="createTime != null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deleteStudentByIds">
+        delete stu from exam_user_student stu
+        left join exam_class2student cla2stu on cla2stu.student_id = stu.student_id
+        left join exam_class cla on cla.class_id=cla2stu.class_id
+        <where>
+            <if test="studentIdsArr!=null and studentIdsArr.length>0">
+                and stu.student_id in
+                <foreach collection="studentIdsArr" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <delete id="deleteClass2Student">
+        delete cla2stu from exam_class2student cla2stu
+        left join exam_user_student stu on cla2stu.student_id = stu.student_id
+        left join exam_class cla on cla.class_id=cla2stu.class_id
+        <where>
+            <if test="studentIdsArr!=null and studentIdsArr.length>0">
+                and cla2stu.student_id in
+                <foreach collection="studentIdsArr" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <update id="updateStudent" parameterType="com.library.bexam.entity.StudentEntity">
+        update exam_user_student stu
+        left join exam_class2student cla2stu on cla2stu.student_id = stu.student_id
+        left join exam_class cla on cla.class_id=cla2stu.class_id
+        <set>
+            <if test="realName!=null and realName!=''">
+                stu.student_realname=#{realName},
+            </if>
+            <if test="code!=null and code!=''">
+                stu.student_code=#{code},
+            </if>
+            <if test="gender!=null">
+                stu.student_gender=#{gender},
+            </if>
+            <if test="age!=null">
+                stu.student_age=#{age},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                stu.create_time=#{createTime}
+            </if>
+        </set>
+        WHERE stu.student_id=#{studentId}
+    </update>
+    <select id="searchStudentById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_user_student stu
+        left join exam_class2student cla2stu on cla2stu.student_id = stu.student_id
+        left join exam_class cla on cla.class_id=cla2stu.class_id
+        <where>
+            <if test="studentId!=0">
+                and stu.student_id=#{studentId}
+            </if>
+        </where>
+        order by stu.student_id desc
+    </select>
+    <select id="searchStudentListByClassId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_user_student stu
+        left join exam_class2student cla2stu on cla2stu.student_id = stu.student_id
+        left join exam_class cla on cla.class_id=cla2stu.class_id
+        <where>
+            <if test="classId!=0">
+                and cla2stu.class_id=#{classId}
+            </if>
+            <if test="search!=null and search!=''">
+                and stu.student_realname like concat('%',#{search},'%')
+            </if>
+        </where>
+        order by stu.student_id desc
+    </select>
+    <insert id="addClass2Student">
+        insert into exam_class2student
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="classId!=0">
+                class_id,
+            </if>
+            <if test="stuId!=0">
+                student_id,
+            </if>
+        </trim>
+        <trim prefix="values(" suffixOverrides="," suffix=")">
+            <if test="classId!=0">
+                #{classId},
+            </if>
+            <if test="stuId!=0">
+                #{stuId},
+            </if>
+        </trim>
+    </insert>
+    <select id="getTotalCount" resultType="java.lang.Integer">
+        select count(student_id) from exam_user_student
+    </select>
+    <select id="searchStudentByPage" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_user_student stu
+        left join exam_class2student cla2stu on cla2stu.student_id = stu.student_id
+        left join exam_class cla on cla.class_id=cla2stu.class_id
+        <where>
+            <if test="classId!=0">
+                and cla2stu.class_id=#{classId}
+            </if>
+            <if test="search!=null and search!=''">
+                and stu.student_realname like concat('%',#{search},'%')
+            </if>
+        </where>
+        order by stu.student_id desc
+        limit #{firstIndex},#{pageSize}
+    </select>
+    <select id="searchOrgTree" resultMap="OrgResultMap">
+        select <include refid="Org_Column_List"/>
+        from exam_school sch
+        left join exam_period p on p.school_id = sch.school_id
+        left join exam_grade g on p.period_id=g.period_id
+        left join exam_class cla on cla.grade_id= g.grade_id
+        order by sch.school_id desc
+    </select>
+</mapper>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.NodeBookDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.NodeBookEntity">
+        <id column="node_id" jdbcType="INTEGER" property="nodeId"/>
+        <result column="node_name" jdbcType="VARCHAR" property="nodeName"/>
+        <result column="parent_node_id" jdbcType="INTEGER" property="parentId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <association property="textBookEntity" javaType="com.library.bexam.form.TextBookForm">
+            <id column="book_id" jdbcType="INTEGER" property="textBookId"/>
+            <result column="book_name" jdbcType="VARCHAR" property="textBookName"/>
+        </association>
+    </resultMap>
+    <sql id="Base_Column_List">
+        distinct node.node_id,node.node_name,node.parent_node_id,DATE_FORMAT(node.create_time,'%Y-%m-%d %H:%i:%s') as create_time,
+        book.book_id,book.book_name
+    </sql>
+    <insert id="addNodeBook" parameterType="com.library.bexam.entity.NodeBookEntity" useGeneratedKeys="true" keyProperty="nodeId">
+        insert into exam_nodebook
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="nodeId!=0">
+                node_id,
+            </if>
+            <if test="nodeName!=null and nodeName!=''">
+                node_name,
+            </if>
+            <if test="parentId!=null">
+                parent_node_id,
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="nodeId!=0">
+                #{nodeId},
+            </if>
+            <if test="nodeName!=null and nodeName!=''">
+                #{nodeName},
+            </if>
+            <if test="parentId!=null">
+                #{parentId},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <insert id="addNodeBookList"  parameterType="com.library.bexam.form.NodeBookForm" useGeneratedKeys="true" keyProperty="nodeId">
+        insert into exam_nodebook(node_id,node_name,parent_node_id,create_time)
+        values
+        <if test="list!=null and list.size()>0">
+            <foreach item="item" collection="list" separator=",">
+                (#{item.nodeId},#{item.nodeName},#{item.parentId},#{item.createTime})
+            </foreach>
+        </if>
+    </insert>
+    <insert id="addTextBook2NodeBook">
+        insert into exam_textbook2nodebook(book_id,node_id)
+        values
+        <if test="list!=null and list.size()>0">
+            <foreach item="item" collection="list" separator=",">
+                (#{item.textBookId},#{item.nodeId})
+            </foreach>
+        </if>
+    </insert>
+    <select id="searchNodeBookPageList" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_nodebook node
+        left join exam_textbook2nodebook book2node on book2node.node_id=node.node_id
+        left join exam_textbook book on book.book_id = book2node.book_id
+        order by node.node_id asc
+        limit #{firstIndex},#{pageSize}
+    </select>
+    <select id="searchNodeListByBookId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_nodebook node
+        left join exam_textbook2nodebook book2node on book2node.node_id=node.node_id
+        left join exam_textbook book on book.book_id = book2node.book_id
+        where book.book_id=#{bookId}
+        order by node.node_id asc
+    </select>
+    <select id="searchChildNodeBookList" resultMap="BaseResultMap">
+        select distinct node.node_id,node.node_name,node.parent_node_id,DATE_FORMAT(node.create_time,'%Y-%m-%d %H:%i:%s') as create_time
+        from exam_nodebook node
+        where node.parent_node_id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.nodeId}
+        </foreach>
+        order by node.node_id asc
+    </select>
+</mapper>

@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.UserDao">
+  <resultMap id="BaseResultMap" type="com.library.bexam.entity.UserEntity">
+    <id column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="user_age" jdbcType="INTEGER" property="age" />
+    <result column="user_gender" jdbcType="INTEGER" property="gender" />
+    <result column="user_type" jdbcType="INTEGER" property="type" />
+    <result column="subject_id" jdbcType="INTEGER" property="subjectId" />
+    <result column="period_id" jdbcType="INTEGER" property="periodId" />
+    <result column="user_status" jdbcType="INTEGER" property="status" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="user_realname" jdbcType="VARCHAR" property="userRealName" />
+    <result column="user_pwd" jdbcType="VARCHAR" property="userPwd" />
+    <result column="user_mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="user_headpath" jdbcType="VARCHAR" property="headPath" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <association property="subjectEntity" javaType="com.library.bexam.form.SubjectForm">
+      <id column="subject_id" jdbcType="INTEGER" property="subjectId"/>
+      <result column="subject_name" jdbcType="VARCHAR" property="subjectName"/>
+    </association>
+    <association property="periodEntity" javaType="com.library.bexam.form.PeriodForm">
+       <id column="period_id" jdbcType="INTEGER" property="periodId"/>
+       <result column="period_name" jdbcType="VARCHAR" property="periodName"/>
+    </association>
+    <collection property="classList" ofType="com.library.bexam.form.ClassForm">
+        <id column="class_id" jdbcType="INTEGER" property="classId"/>
+        <result column="class_name" jdbcType="VARCHAR" property="className"/>
+        <association property="gradeEntity" javaType="com.library.bexam.form.GradeForm">
+            <id column="grade_id" jdbcType="INTEGER" property="gradeId"/>
+            <result column="grade_name" jdbcType="VARCHAR" property="gradeName"/>
+        </association>
+    </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+      distinct user_id,user_name,user_realname,user_pwd,user_mobile,user_age,user_gender,user_status,user_type,user_headpath,
+      subject_id, DATE_FORMAT(create_time,'%Y-%m-%d %H:%i:%s') as create_time,period_id
+  </sql>
+  <sql id="Associate_Column_List">
+    distinct u.user_id,u.user_name,u.user_realname,u.user_pwd,u.user_mobile,u.user_age,u.user_gender,u.user_status,u.user_type,u.user_headpath,
+    u.subject_id, DATE_FORMAT(u.create_time,'%Y-%m-%d %H:%i:%s') as create_time,sub.subject_id,sub.subject_name,p.period_id,p.period_name
+  </sql>
+  <insert id="addUser" parameterType="com.library.bexam.entity.UserEntity" useGeneratedKeys="true" keyProperty="userId">
+      insert into exam_user
+      <trim prefix="(" suffix=")" suffixOverrides=",">
+          <if test="userName != null">
+              user_name,
+          </if>
+          <if test="userRealName != null">
+              user_realname,
+          </if>
+          <if test="userPwd != null">
+              user_pwd,
+          </if>
+          <if test="mobile != null">
+              user_mobile,
+          </if>
+          <if test="age != null">
+              user_age,
+          </if>
+          <if test="gender != null">
+              user_gender,
+          </if>
+          <if test="status != null">
+              user_status,
+          </if>
+          <if test="type != null">
+              user_type,
+          </if>
+          <if test="headPath != null">
+              user_headpath,
+          </if>
+          <if test="subjectId != null">
+              subject_id,
+          </if>
+          <if test="periodId!=null">
+              period_id,
+          </if>
+          <if test="createTime != null">
+              create_time,
+          </if>
+      </trim>
+      <trim prefix="values (" suffix=")" suffixOverrides=",">
+          <if test="userName != null">
+              #{userName},
+          </if>
+          <if test="userRealName != null">
+              #{userRealName},
+          </if>
+          <if test="userPwd != null">
+              #{userPwd},
+          </if>
+          <if test="mobile != null">
+              #{mobile},
+          </if>
+          <if test="age != null">
+              #{age},
+          </if>
+          <if test="gender != null">
+              #{gender},
+          </if>
+          <if test="status != null">
+              #{status},
+          </if>
+          <if test="type != null">
+              #{type},
+          </if>
+          <if test="headPath != null">
+              #{headPath},
+          </if>
+          <if test="subjectId != null">
+              #{subjectId},
+          </if>
+          <if test="periodId!=null">
+              #{periodId},
+          </if>
+          <if test="createTime != null">
+              #{createTime},
+          </if>
+      </trim>
+  </insert>
+    <select id="searchUserById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Associate_Column_List"/>
+        from exam_user u
+        left join exam_subject sub on u.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=u.period_id
+        where user_id=#{userId} and user_status=0
+        order by u.user_id desc
+    </select>
+    <select id="exitUser" parameterType="com.library.bexam.entity.UserEntity" resultType="java.lang.Integer">
+        select count(user_id) as num from exam_user
+        where user_mobile=#{mobile} or user_name=#{userName} and user_status = 0
+    </select>
+    <select id="exitUserMap" resultType="java.lang.Integer">
+        select count(user_id) as num from exam_user
+        where user_mobile=#{mobile} or user_name=#{userName} and user_status = 0
+    </select>
+    <select id="searchUserList" resultMap="BaseResultMap">
+        select u.user_id,u.user_name,u.user_realname,u.user_pwd,u.user_mobile,u.user_age,u.user_gender,u.user_status,u.user_type,u.user_headpath,
+        u.subject_id, DATE_FORMAT(u.create_time,'%Y-%m-%d %H:%i:%s') as create_time,sub.subject_id,sub.subject_name,p.period_id,p.period_name,
+        cla.class_id,cla.class_name,g.grade_id,g.grade_name
+        from exam_user u
+        left join exam_subject sub on u.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=u.period_id
+        left join exam_class2user cla2user on cla2user.user_id=u.user_id
+        left join exam_class cla on cla.class_id=cla2user.class_id
+        left join exam_grade g on g.grade_id=cla.grade_id
+        <where>
+            <if test="search!=null and search!=''">
+                and (u.user_realname like concat('%',#{search},'%') or u.user_mobile like concat('%',#{search},'%'))
+            </if>
+            <if test="type!=null and type!=''">
+                and u.user_type=#{type}
+            </if>
+            and u.user_status = 0
+        </where>
+        order by u.create_time desc
+        limit #{firstIndex},#{pageSize}
+    </select>
+
+    <select id="getUserTotalCount" resultType="java.lang.Integer">
+        select count(user_id) as totalNum from exam_user
+        where user_status = 0
+    </select>
+
+    <update id="deleteUser">
+        update exam_user u
+        left join exam_subject sub
+        on u.subject_id=sub.subject_id
+          set u.user_status=1
+          where u.user_id in
+            <if test="userIds!=null">
+                <foreach item="item" collection="userIds" open="(" separator="," close=")">
+                      #{item}
+                </foreach>
+            </if>
+    </update>
+    <update id="updateUser" parameterType="com.library.bexam.entity.UserEntity">
+        update exam_user u
+        left join exam_subject sub
+        on u.subject_id=sub.subject_id
+        <set>
+            <if test="userName!=null and userName!=''">
+                u.user_name=#{userName},
+            </if>
+            <if test="userRealName!=null and userRealName!=''">
+                u.user_realname=#{userRealName},
+            </if>
+            <if test="userPwd!=null and userPwd!=''">
+                u.user_pwd=#{userPwd},
+            </if>
+            <if test="mobile!=null and mobile!=''">
+                u.user_mobile=#{mobile},
+            </if>
+            <if test="headPath!=null and headPath!=''">
+                u.user_headpath=#{headPath},
+            </if>
+            <if test="age!=null">
+                u.user_age=#{age},
+            </if>
+            <if test="gender!=null">
+                u.user_gender=#{gender},
+            </if>
+            <if test="subjectId">
+                u.subject_id=#{subjectId},
+            </if>
+            <if test="type!=null">
+                u.user_type=#{type},
+            </if>
+            <if test="periodId!=0">
+                u.period_id=#{periodId},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                u.create_time=#{createTime},
+            </if>
+        </set>
+        where u.user_id=#{userId}
+    </update>
+    <select id="searchUserByName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select <include refid="Associate_Column_List"/>
+        from exam_user u
+        left join exam_subject sub on u.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=u.period_id
+        where u.user_name=#{userName} and u.user_status=0
+        order by u.user_id desc
+    </select>
+    <select id="searchUser" parameterType="com.library.bexam.entity.UserEntity" resultMap="BaseResultMap">
+        select <include refid="Associate_Column_List"/>
+        from exam_user u
+        left join exam_subject sub on u.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=u.period_id
+        where (u.user_name=#{userName} or u.user_mobile=#{mobile})
+        and u.user_id!=#{userId} and u.user_status=0
+        order by u.user_id desc
+    </select>
+    <insert id="allotUserToClass">
+        insert into exam_class2user(class_id,user_id)
+        values
+        <foreach collection="userIdsArr" item="item" separator=",">
+            (
+               #{classId},#{item}
+            )
+        </foreach>
+    </insert>
+    <select id="searchUsersByClassId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Associate_Column_List"/>
+        from exam_user u
+        left join exam_subject sub on u.subject_id=sub.subject_id
+        left join exam_period p on p.period_id=u.period_id
+        left join exam_class2user cla2user on cla2user.user_id=u.user_id
+        left join exam_class cla on cla.class_id=cla2user.class_id
+        where cla.class_id=#{classId}
+        order by u.user_id desc
+    </select>
+    <delete id="deleteCla2UserByClassId">
+        delete from exam_class2user
+        <where>
+            <if test="list!=null">
+                class_id in
+                <foreach collection="list" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <delete id="deleteCla2UserByUserId">
+        delete from exam_class2user
+        <where>
+            <if test="userIdsArr!=null and userIdsArr.length>0">
+                user_id in
+                <foreach collection="userIdsArr" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <delete id="deleteClass2User">
+        delete from exam_class2user where user_id=#{userId} and class_id=#{classId}
+    </delete>
+    <select id="searchClassListByUId" parameterType="java.lang.Integer" resultType="java.lang.String">
+        select cla2u.class_id
+        from exam_class2user cla2u
+        left join exam_user u on cla2u.user_id=u.user_id
+        where u.user_id=#{userId}
+    </select>
+    <insert id="addBatchUsers">
+        insert into exam_user(user_realname,user_name,user_pwd,user_status,user_type,user_mobile,user_age,user_gender,
+               subject_id,period_id,create_time)
+        values
+        <foreach collection="list" item="user" separator=",">
+            (
+               #{user.userRealName},
+               #{user.userName},
+               #{user.userPwd},
+               #{user.status},
+               #{user.type},
+               #{user.mobile},
+               #{user.age},
+               #{user.gender},
+               #{user.subjectId},
+               #{user.periodId},
+               #{user.createTime}
+            )
+        </foreach>
+    </insert>
+</mapper>

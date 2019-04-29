@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.PeriodDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.PeriodEntity">
+        <id column="period_id" jdbcType="INTEGER" property="periodId" />
+        <result column="period_name" jdbcType="VARCHAR" property="periodName" />
+        <result column="school_id" jdbcType="INTEGER" property="schoolId" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <association property="schoolEntity" javaType="com.library.bexam.form.SchoolForm">
+            <id column="school_id" jdbcType="INTEGER" property="schoolId"/>
+            <result column="school_name" jdbcType="VARCHAR" property="schoolName"/>
+        </association>
+        <collection property="gradeList" ofType="com.library.bexam.form.GradeForm">
+          <id column="grade_id" jdbcType="INTEGER" property="gradeId"/>
+          <result column="grade_name" jdbcType="VARCHAR" property="gradeName"/>
+          <result column="period_id" jdbcType="INTEGER" property="periodId"/>
+        </collection>
+    </resultMap>
+    <sql id="Base_Column_List">
+        distinct p.period_id,p.period_name,p.school_id,DATE_FORMAT(p.create_time,'%Y-%m-%d %H:%i:%s') as create_time,g.grade_id,g.grade_name,
+        sch.school_id,sch.school_name
+    </sql>
+    <insert id="addPeriod" parameterType="com.library.bexam.entity.PeriodEntity" useGeneratedKeys="true" keyProperty="periodId">
+        insert into exam_period
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="periodName!=null and periodName!=''">
+                period_name,
+            </if>
+            <if test="schoolId!=0">
+                school_id,
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values(" suffixOverrides="," suffix=")">
+            <if test="periodName!=null and periodName!=''">
+                #{periodName},
+            </if>
+            <if test="schoolId!=0">
+                #{schoolId},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <delete id="deletePeriodByIds">
+        delete from exam_period
+        <where>
+            <if test="periodIdArr!=null and periodIdArr.length>0">
+                and period_id in
+                <foreach item="item" index="index" collection="periodIdArr" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </delete>
+    <update id="updatePeriod" parameterType="com.library.bexam.entity.PeriodEntity">
+        update exam_period p
+        left join exam_grade g on p.period_id=g.period_id
+        left join exam_school sch on p.school_id=sch.school_id
+        <set>
+            <if test="periodName!=null and periodName!=''">
+                p.period_name=#{periodName},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                p.create_time=#{createTime},
+            </if>
+        </set>
+        where p.period_id=#{periodId}
+    </update>
+    <select id="searchPeriodList" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_period p
+        left join exam_grade g on p.period_id=g.period_id
+        left join exam_school sch on p.school_id=sch.school_id
+        order by p.period_id desc
+    </select>
+    <select id="searchPeriodById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_period p
+        left join exam_grade g on p.period_id=g.period_id
+        left join exam_school sch on p.school_id=sch.school_id
+        where p.period_id=#{periodId}
+        order by p.period_id desc
+    </select>
+</mapper>

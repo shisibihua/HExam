@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.bexam.dao.SchoolDao">
+    <resultMap id="BaseResultMap" type="com.library.bexam.entity.SchoolEntity">
+        <id column="school_id" jdbcType="INTEGER" property="schoolId" />
+        <result column="school_name" jdbcType="VARCHAR" property="schoolName" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+        <collection property="periodEntityList" ofType="com.library.bexam.form.PeriodForm">
+            <id column="period_id" jdbcType="INTEGER" property="periodId" />
+            <result column="period_name" jdbcType="VARCHAR" property="periodName" />
+            <result column="school_id" jdbcType="INTEGER" property="schoolId"/>
+        </collection>
+    </resultMap>
+    <sql id="Base_Column_List">
+        distinct sch.school_id,sch.school_name,DATE_FORMAT(sch.create_time,'%Y-%m-%d %H:%i:%s') as create_time,p.period_id,p.period_name
+    </sql>
+    <insert id="addSchool" parameterType="com.library.bexam.entity.SchoolEntity">
+        insert into exam_school
+        <trim prefix="(" suffixOverrides="," suffix=")">
+            <if test="schoolName!=null and schoolName!=''">
+                school_name,
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                create_time,
+            </if>
+        </trim>
+        <trim prefix="values(" suffixOverrides="," suffix=")">
+            <if test="schoolName!=null and schoolName!=''">
+                #{schoolName},
+            </if>
+            <if test="createTime!=null and createTime!=''">
+                #{createTime},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateSchool" parameterType="com.library.bexam.entity.SchoolEntity">
+        update exam_school
+        <set>
+            <if test="schoolName!=null and schoolName!=''">
+                school_name=#{schoolName}
+            </if>
+        </set>
+        where school_id=#{schoolId}
+    </update>
+    <select id="searchSchool" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_school sch
+        left join exam_period p on sch.school_id=p.school_id
+        order by sch.school_id desc
+    </select>
+    <select id="searchSchoolByName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_school sch
+        left join exam_period p on sch.school_id=p.school_id
+        where sch.school_name=#{schoolName}
+        order by sch.school_id desc
+    </select>
+    <select id="searchSchoolById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from exam_school sch
+        left join exam_period p on sch.school_id=p.school_id
+        where sch.school_Id=#{schoolId}
+        order by sch.school_id desc
+    </select>
+
+</mapper>
