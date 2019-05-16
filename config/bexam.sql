@@ -33,6 +33,12 @@ CREATE TABLE IF NOT EXISTS `exam_subject` (
   PRIMARY KEY (`subject_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `exam_period2subject` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '知识点id',
+  `period_id` int(11) DEFAULT NULL COMMENT '学段id',
+  `subject_id` int(11) DEFAULT NULL COMMENT '科目id',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for textbook  教材册别表

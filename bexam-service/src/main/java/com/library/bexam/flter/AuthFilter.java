@@ -50,9 +50,10 @@ public class AuthFilter implements Filter {
             String token=request.getHeader("X-Token")==null?"":request.getHeader("X-Token");
             //接口地址
             String urlPath=request.getServletPath();
-            if (!StringUtil.isEmpty(token) || urlPath.contains("user/login") || urlPath.contains("user/getUserByToken")){
+            if (!StringUtil.isEmpty(token) || urlPath.contains("user/login") || urlPath.contains("user/getUserByToken") ||
+                    urlPath.contains("druid")){
                 //登录接口无需验证
-                if(urlPath.contains("user/login") || urlPath.contains("user/getUserByToken")){
+                if(urlPath.contains("user/login") || urlPath.contains("user/getUserByToken") || urlPath.contains("druid")){
                     //过滤通过
                     filterChain.doFilter(request, response);
                 }else{

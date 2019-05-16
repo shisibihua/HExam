@@ -1,5 +1,6 @@
 package com.library.bexam.common.config;
 
+import com.alibaba.druid.filter.config.ConfigTools;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.http.StatViewServlet;
 import com.alibaba.druid.support.http.WebStatFilter;
@@ -53,6 +54,7 @@ public class DruidConfiguration {
         private String url;
         private String username;
         private String password;
+        private String publicKey;
         private String driverClassName;
         private int initialSize;
         private int minIdle;
@@ -75,7 +77,11 @@ public class DruidConfiguration {
             DruidDataSource datasource = new DruidDataSource();
             datasource.setUrl(url);
             datasource.setUsername(username);
-            datasource.setPassword(password);
+            try {
+                datasource.setPassword(ConfigTools.decrypt(publicKey,password));
+            } catch (Exception e) {
+                ;
+            }
             datasource.setDriverClassName(driverClassName);
 
             //configuration
@@ -242,6 +248,14 @@ public class DruidConfiguration {
 
         public void setConnectionProperties(String connectionProperties) {
             this.connectionProperties = connectionProperties;
+        }
+
+        public String getPublicKey() {
+            return publicKey;
+        }
+
+        public void setPublicKey(String publicKey) {
+            this.publicKey = publicKey;
         }
     }
 
