@@ -46,6 +46,7 @@ public class BExamServiceApplication {
         ApplicationContext app = SpringApplication.run(BExamServiceApplication.class, args);
         SpringUtil.setApplicationContext(app);
         SpringUtil.scannerBeans();
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Shanghai"));
         System.out.println(START_COMPLETION);
         logger.error(START_COMPLETION);
     }
