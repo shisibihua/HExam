@@ -16,7 +16,7 @@
         <!--项目类依赖-->
         <bexam_version>1.0.0</bexam_version>
         <!--定时任务-->
-        <quartz_version>2.2.1</quartz_version>
+        <quartz_version>2.3.2</quartz_version>
         <!--spring cloud-->
         <archaius>0.7.5</archaius>
         <spring_boot>1.5.7.RELEASE</spring_boot>
