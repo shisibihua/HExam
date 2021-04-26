@@ -81,7 +81,7 @@
         <jodd_version>3.2.6</jodd_version>
 
         <ooxml_version>3.16</ooxml_version>
-        <commonsio_version>2.4</commonsio_version>
+        <commonsio_version>2.7</commonsio_version>
         <commonscodec_version>1.9</commonscodec_version>
         <!--apache-->
         <commons_bean_version>1.9.3</commons_bean_version>
